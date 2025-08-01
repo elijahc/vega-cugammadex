@@ -67,25 +67,22 @@ async function handleChatRequest(
       messages.unshift({ role: "system", content: SYSTEM_PROMPT });
     }
 
-    const response = await env.AI.run(
-      MODEL_ID,
-      {
-        messages,
-        max_tokens: 1024,
+    
+    const response = await env.AI.autorag("velma-rag-1").aiSearch({
+      query: messages[messages.length - 1].content,
+      rewrite_query: true,
+      max_num_results: 2,
+      ranking_options: {
+        score_threshold: 0.3,
       },
-      {
-        returnRawResponse: true,
-        // Uncomment to use AI Gateway
-        // gateway: {
-        //   id: "YOUR_GATEWAY_ID", // Replace with your AI Gateway ID
-        //   skipCache: false,      // Set to true to bypass cache
-        //   cacheTtl: 3600,        // Cache time-to-live in seconds
-        // },
-      },
-    );
+    });
+ 
 
     // Return streaming response
-    return response;
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
   } catch (error) {
     console.error("Error processing chat request:", error);
     return new Response(
